@@ -61,10 +61,11 @@ const mockPayrollData = [
 export default function AdminPayroll() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("all");
+  const [payrollData, setPayrollData] = useState(mockPayrollData); // Add state for data
 
   const departments = ["all", "Engineering", "Marketing", "Design", "HR"];
 
-  const filteredData = mockPayrollData.filter((emp) => {
+  const filteredData = payrollData.filter((emp) => {
     const matchesSearch = 
       emp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       emp.employeeId.toLowerCase().includes(searchQuery.toLowerCase());
@@ -82,16 +83,70 @@ export default function AdminPayroll() {
 
   const totalPayroll = filteredData.reduce((sum, emp) => sum + emp.netPay, 0);
 
+  // Add these functions
+  const handleExport = () => {
+    const csvContent = [
+      ["Name", "Employee ID", "Department", "Basic Salary", "Allowances", "Deductions", "Net Pay"],
+      ...payrollData.map(emp => [
+        emp.name,
+        emp.employeeId,
+        emp.department,
+        emp.basicSalary,
+        emp.allowances,
+        emp.deductions,
+        emp.netPay
+      ])
+    ].map(row => row.join(",")).join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `payroll_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+    
+    alert("Payroll data exported successfully as CSV!");
+  };
+
+  const handleRunPayroll = () => {
+    // In a real app, this would call an API to process payroll
+    // For now, we'll just show a confirmation
+    const confirmed = window.confirm(
+      `Run payroll for ${payrollData.length} employees? Total amount: ${formatCurrency(totalPayroll)}`
+    );
+    
+    if (confirmed) {
+      alert("Payroll processing started! Employees will be paid shortly.");
+      // Here you would typically make an API call to process payroll
+      // Example: await fetch('/api/payroll/run', { method: 'POST' });
+    }
+  };
+
+  const handleEdit = (employeeId: string) => {
+    // In a real app, this would open an edit modal or navigate to edit page
+    alert(`Edit payroll for employee ID: ${employeeId}\n\nIn a real application, this would open an edit form.`);
+    
+    // Example implementation for edit modal:
+    // const employee = payrollData.find(emp => emp.id === employeeId);
+    // if (employee) {
+    //   setEditingEmployee(employee);
+    //   setIsEditModalOpen(true);
+    // }
+  };
+
   return (
     <DashboardLayout>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-serif text-foreground">Payroll</h1>
         <div className="flex gap-2">
-          <Button variant="outline">
+          <Button variant="outline" onClick={handleExport}> {/* Add onClick */}
             <Download size={16} className="mr-2" />
             Export
           </Button>
-          <Button>
+          <Button onClick={handleRunPayroll}> {/* Add onClick */}
             <DollarSign size={16} className="mr-2" />
             Run Payroll
           </Button>
@@ -193,7 +248,12 @@ export default function AdminPayroll() {
                     <span className="text-sm font-medium text-foreground">{formatCurrency(employee.netPay)}</span>
                   </td>
                   <td className="py-3 px-4 text-right">
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8"
+                      onClick={() => handleEdit(employee.id)} // Add onClick
+                    >
                       <Pencil size={14} />
                     </Button>
                   </td>

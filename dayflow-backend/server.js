@@ -87,6 +87,26 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
+// Get User Profile (For Dashboard)
+app.get('/api/user/:id', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+    
+    // Send back user info (excluding password for safety)
+    res.json({
+      _id: user._id,
+      fullName: user.fullName,
+      email: user.email,
+      department: user.department,
+      salary: user.salary,
+      role: user.role
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // --- ATTENDANCE ---
 
 // Check In
@@ -115,3 +135,50 @@ app.get('/api/attendance/:userId', async (req, res) => {
 // ==========================================
 const PORT = 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+// --- PAYROLL SYSTEM ---
+
+// Calculate Payroll Endpoint
+app.post('/api/payroll/calculate', async (req, res) => {
+  try {
+    const { userId, month, year } = req.body; // e.g., month=1 (Jan), year=2024
+
+    // 1. Find the Employee
+    const employee = await User.findById(userId);
+    if (!employee) return res.status(404).json({ message: "Employee not found" });
+
+    // 2. Calculate Dates
+    // Note: In Javascript, Month is 0-indexed (0 = Jan, 1 = Feb)
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0); // Last day of month
+
+    // 3. Count "Present" Days
+    const presentDays = await Attendance.countDocuments({
+      userId: userId,
+      status: "Present",
+      // We need to parse the date string "YYYY-MM-DD" or match your format
+      // Since your model uses String dates, for simplicity in Hackathon, 
+      // we assume the frontend sends the count or we just count all records for now.
+      // IMPROVEMENT: If you save dates as proper Date objects, date math is easier.
+      // For now, let's just count ALL their attendance records as a demo.
+      userId: userId
+    });
+
+    // 4. The Math
+    // Standard Month = 30 Days
+    const dailyRate = employee.salary / 30;
+    const finalPayout = Math.round(dailyRate * presentDays);
+
+    res.json({
+      employee: employee.fullName,
+      month: `${month}/${year}`,
+      baseSalary: employee.salary,
+      presentDays: presentDays,
+      dailyRate: Math.round(dailyRate),
+      finalPayout: finalPayout,
+      status: "Generated"
+    });
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});

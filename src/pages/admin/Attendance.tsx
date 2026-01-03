@@ -20,11 +20,43 @@ export default function AdminAttendance() {
   const [statusFilter, setStatusFilter] = useState("all");
 
   const prevDay = () => {
-    setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() - 1)));
+    const newDate = new Date(currentDate);
+    newDate.setDate(newDate.getDate() - 1);
+    setCurrentDate(newDate);
   };
 
   const nextDay = () => {
-    setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() + 1)));
+    const newDate = new Date(currentDate);
+    newDate.setDate(newDate.getDate() + 1);
+    setCurrentDate(newDate);
+  };
+
+  // Add this export function
+  const handleExportAttendance = () => {
+    const csvContent = [
+      ["Employee Name", "Date", "Check In", "Check Out", "Status", "Work Hours"],
+      ...mockAttendanceData.map(record => [
+        record.name,
+        record.date,
+        record.checkIn || "N/A",
+        record.checkOut || "N/A",
+        record.status.charAt(0).toUpperCase() + record.status.slice(1),
+        record.hours
+      ])
+    ].map(row => row.join(",")).join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    const formattedDate = currentDate.toISOString().split('T')[0];
+    link.download = `attendance_${formattedDate}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+    
+    alert(`Attendance data for ${currentDate.toLocaleDateString()} exported successfully!`);
   };
 
   const getStatusBadge = (status: string) => {
@@ -53,7 +85,7 @@ export default function AdminAttendance() {
     <DashboardLayout>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-serif text-foreground">Attendance</h1>
-        <Button variant="outline">
+        <Button variant="outline" onClick={handleExportAttendance}> {/* Add onClick */}
           <Download size={16} className="mr-2" />
           Export
         </Button>

@@ -4,12 +4,14 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Pencil, Save, X, User, Briefcase, FileText, Shield } from "lucide-react";
 
 export default function EmployeeProfile() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<"resume" | "private" | "salary" | "security">("resume");
   const [isEditing, setIsEditing] = useState(false);
+  const [isEditingResume, setIsEditingResume] = useState(false);
   const [profileData, setProfileData] = useState({
     name: user?.name || "",
     email: user?.email || "",
@@ -28,6 +30,13 @@ export default function EmployeeProfile() {
     location: "San Francisco Office",
   });
 
+  const [resumeData, setResumeData] = useState({
+    about: "Passionate software developer with 5+ years of experience building scalable web applications. Love working with React and TypeScript.",
+    jobLove: "The collaborative environment and the opportunity to solve complex problems with a talented team.",
+    skills: ["React", "TypeScript", "Node.js", "PostgreSQL", "AWS"],
+    certifications: "AWS Certified Developer, Google Cloud Professional"
+  });
+
   const tabs = [
     { id: "resume", label: "Resume", icon: FileText },
     { id: "private", label: "Private Info", icon: User },
@@ -35,9 +44,71 @@ export default function EmployeeProfile() {
     { id: "security", label: "Security", icon: Shield },
   ];
 
+  // Add this function for profile picture edit
+  const handleProfilePictureEdit = () => {
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.accept = "image/*";
+    fileInput.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        alert(`Profile picture updated to: ${file.name}\n\nIn a real application, this would upload and save the image.`);
+        // In real app: upload to server and update user profile
+      }
+    };
+    fileInput.click();
+  };
+
+  // Update handleSave function
   const handleSave = () => {
     setIsEditing(false);
-    // Save logic would go here
+    // Save logic would go here - in a real app, make API call
+    alert("Personal information saved successfully!");
+    console.log("Saved profile data:", profileData);
+  };
+
+  // Add function for saving resume data
+  const handleSaveResume = () => {
+    setIsEditingResume(false);
+    alert("Resume information saved successfully!");
+    console.log("Saved resume data:", resumeData);
+  };
+
+  // Add function for Update Password button
+  const handleUpdatePassword = () => {
+    const newPassword = prompt("Enter new password:");
+    if (newPassword) {
+      const confirmPassword = prompt("Confirm new password:");
+      if (newPassword === confirmPassword) {
+        alert("Password updated successfully!");
+        // In real app: await fetch('/api/auth/update-password', { method: 'POST', body: JSON.stringify({ newPassword }) });
+      } else {
+        alert("Passwords don't match!");
+      }
+    }
+  };
+
+  // Add function for Enable 2FA button
+  const handleEnable2FA = () => {
+    const enable = confirm("Enable Two-Factor Authentication?\n\nThis will add an extra security layer to your account.");
+    if (enable) {
+      alert("Two-Factor Authentication enabled!\n\nIn a real application, you would set up 2FA with an authenticator app.");
+      // In real app: await fetch('/api/auth/enable-2fa', { method: 'POST' });
+    }
+  };
+
+  // Add function for View Sessions button
+  const handleViewSessions = () => {
+    alert("Active Sessions:\n\n1. Chrome - Windows 11 (Current)\n2. Safari - iPhone (Today)\n3. Firefox - Mac (2 days ago)\n\nIn a real application, you could revoke sessions here.");
+  };
+
+  // Add function for name edit
+  const handleNameEdit = () => {
+    const newName = prompt("Enter new name:", profileData.name);
+    if (newName && newName !== profileData.name) {
+      setProfileData({...profileData, name: newName});
+      alert("Name updated successfully!");
+    }
   };
 
   return (
@@ -54,13 +125,24 @@ export default function EmployeeProfile() {
                   {user?.name?.charAt(0) || "U"}
                 </span>
               </div>
-              <button className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-accent border border-border flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors">
+              <button 
+                className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-accent border border-border flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors"
+                onClick={handleProfilePictureEdit} // Add onClick
+              >
                 <Pencil size={12} />
               </button>
             </div>
             
             <div className="flex-1">
-              <h2 className="text-xl font-medium text-foreground">{profileData.name}</h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-xl font-medium text-foreground">{profileData.name}</h2>
+                <button 
+                  onClick={handleNameEdit} // Add onClick
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <Pencil size={14} />
+                </button>
+              </div>
               <p className="text-sm text-muted-foreground">{user?.employeeId}</p>
               <p className="text-sm text-muted-foreground">{profileData.email}</p>
               <p className="text-sm text-muted-foreground">{profileData.phone}</p>
@@ -105,44 +187,98 @@ export default function EmployeeProfile() {
                 <Button 
                   variant="ghost" 
                   size="sm"
-                  onClick={() => setIsEditing(!isEditing)}
+                  onClick={() => setIsEditingResume(!isEditingResume)} // Update onClick
                 >
-                  {isEditing ? <X size={16} /> : <Pencil size={16} />}
+                  {isEditingResume ? <X size={16} /> : <Pencil size={16} />}
                 </Button>
               </div>
               
-              <div className="space-y-4">
-                <div>
-                  <Label className="text-muted-foreground text-xs uppercase tracking-wide">About me</Label>
-                  <p className="text-sm text-foreground mt-1">
-                    Passionate software developer with 5+ years of experience building scalable web applications. 
-                    Love working with React and TypeScript.
-                  </p>
-                </div>
+              {isEditingResume ? (
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-muted-foreground text-xs uppercase tracking-wide">About me</Label>
+                    <Textarea 
+                      value={resumeData.about}
+                      onChange={(e) => setResumeData({...resumeData, about: e.target.value})}
+                      className="mt-1"
+                      rows={3}
+                    />
+                  </div>
 
-                <div>
-                  <Label className="text-muted-foreground text-xs uppercase tracking-wide">What I love about my job</Label>
-                  <p className="text-sm text-foreground mt-1">
-                    The collaborative environment and the opportunity to solve complex problems with a talented team.
-                  </p>
-                </div>
+                  <div>
+                    <Label className="text-muted-foreground text-xs uppercase tracking-wide">What I love about my job</Label>
+                    <Textarea 
+                      value={resumeData.jobLove}
+                      onChange={(e) => setResumeData({...resumeData, jobLove: e.target.value})}
+                      className="mt-1"
+                      rows={2}
+                    />
+                  </div>
 
-                <div>
-                  <Label className="text-muted-foreground text-xs uppercase tracking-wide">Skills</Label>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {["React", "TypeScript", "Node.js", "PostgreSQL", "AWS"].map((skill) => (
-                      <span key={skill} className="px-2 py-1 text-xs rounded-full bg-accent text-accent-foreground">
-                        {skill}
-                      </span>
-                    ))}
+                  <div>
+                    <Label className="text-muted-foreground text-xs uppercase tracking-wide">Skills</Label>
+                    <div className="mt-2">
+                      <Input 
+                        value={resumeData.skills.join(", ")}
+                        onChange={(e) => setResumeData({...resumeData, skills: e.target.value.split(",").map(s => s.trim())})}
+                        className="mt-1"
+                        placeholder="React, TypeScript, Node.js..."
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">Separate skills with commas</p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label className="text-muted-foreground text-xs uppercase tracking-wide">Certifications</Label>
+                    <Input 
+                      value={resumeData.certifications}
+                      onChange={(e) => setResumeData({...resumeData, certifications: e.target.value})}
+                      className="mt-1"
+                    />
+                  </div>
+
+                  <div className="flex gap-2 justify-end">
+                    <Button variant="outline" size="sm" onClick={() => setIsEditingResume(false)}>
+                      Cancel
+                    </Button>
+                    <Button size="sm" onClick={handleSaveResume}> {/* Add onClick */}
+                      <Save size={16} className="mr-2" /> Save
+                    </Button>
                   </div>
                 </div>
+              ) : (
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-muted-foreground text-xs uppercase tracking-wide">About me</Label>
+                    <p className="text-sm text-foreground mt-1">
+                      {resumeData.about}
+                    </p>
+                  </div>
 
-                <div>
-                  <Label className="text-muted-foreground text-xs uppercase tracking-wide">Certifications</Label>
-                  <p className="text-sm text-foreground mt-1">AWS Certified Developer, Google Cloud Professional</p>
+                  <div>
+                    <Label className="text-muted-foreground text-xs uppercase tracking-wide">What I love about my job</Label>
+                    <p className="text-sm text-foreground mt-1">
+                      {resumeData.jobLove}
+                    </p>
+                  </div>
+
+                  <div>
+                    <Label className="text-muted-foreground text-xs uppercase tracking-wide">Skills</Label>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {resumeData.skills.map((skill) => (
+                        <span key={skill} className="px-2 py-1 text-xs rounded-full bg-accent text-accent-foreground">
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label className="text-muted-foreground text-xs uppercase tracking-wide">Certifications</Label>
+                    <p className="text-sm text-foreground mt-1">{resumeData.certifications}</p>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
 
@@ -159,7 +295,7 @@ export default function EmployeeProfile() {
                     <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)}>
                       Cancel
                     </Button>
-                    <Button size="sm" onClick={handleSave}>
+                    <Button size="sm" onClick={handleSave}> {/* Already has onClick */}
                       <Save size={16} className="mr-2" /> Save
                     </Button>
                   </div>
@@ -167,13 +303,48 @@ export default function EmployeeProfile() {
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField label="Date of Birth" value={profileData.dateOfBirth} isEditing={isEditing} />
-                <FormField label="Nationality" value={profileData.nationality} isEditing={isEditing} />
-                <FormField label="Gender" value={profileData.gender} isEditing={isEditing} />
-                <FormField label="Marital Status" value={profileData.maritalStatus} isEditing={isEditing} />
-                <FormField label="Personal Email" value={profileData.personalEmail} isEditing={isEditing} />
-                <FormField label="Residing Address" value={profileData.address} isEditing={isEditing} />
-                <FormField label="Date of Joining" value={profileData.dateOfJoining} isEditing={isEditing} />
+                <FormField 
+                  label="Date of Birth" 
+                  value={profileData.dateOfBirth} 
+                  isEditing={isEditing}
+                  onChange={(value) => setProfileData({...profileData, dateOfBirth: value})}
+                />
+                <FormField 
+                  label="Nationality" 
+                  value={profileData.nationality} 
+                  isEditing={isEditing}
+                  onChange={(value) => setProfileData({...profileData, nationality: value})}
+                />
+                <FormField 
+                  label="Gender" 
+                  value={profileData.gender} 
+                  isEditing={isEditing}
+                  onChange={(value) => setProfileData({...profileData, gender: value})}
+                />
+                <FormField 
+                  label="Marital Status" 
+                  value={profileData.maritalStatus} 
+                  isEditing={isEditing}
+                  onChange={(value) => setProfileData({...profileData, maritalStatus: value})}
+                />
+                <FormField 
+                  label="Personal Email" 
+                  value={profileData.personalEmail} 
+                  isEditing={isEditing}
+                  onChange={(value) => setProfileData({...profileData, personalEmail: value})}
+                />
+                <FormField 
+                  label="Residing Address" 
+                  value={profileData.address} 
+                  isEditing={isEditing}
+                  onChange={(value) => setProfileData({...profileData, address: value})}
+                />
+                <FormField 
+                  label="Date of Joining" 
+                  value={profileData.dateOfJoining} 
+                  isEditing={isEditing}
+                  onChange={(value) => setProfileData({...profileData, dateOfJoining: value})}
+                />
               </div>
 
               <div className="pt-4 border-t border-border">
@@ -236,7 +407,9 @@ export default function EmployeeProfile() {
                       <p className="font-medium text-foreground">Change Password</p>
                       <p className="text-sm text-muted-foreground">Last changed 30 days ago</p>
                     </div>
-                    <Button variant="outline" size="sm">Update</Button>
+                    <Button variant="outline" size="sm" onClick={handleUpdatePassword}> {/* Add onClick */}
+                      Update
+                    </Button>
                   </div>
                 </div>
 
@@ -246,7 +419,9 @@ export default function EmployeeProfile() {
                       <p className="font-medium text-foreground">Two-Factor Authentication</p>
                       <p className="text-sm text-muted-foreground">Add an extra layer of security</p>
                     </div>
-                    <Button variant="outline" size="sm">Enable</Button>
+                    <Button variant="outline" size="sm" onClick={handleEnable2FA}> {/* Add onClick */}
+                      Enable
+                    </Button>
                   </div>
                 </div>
 
@@ -256,7 +431,9 @@ export default function EmployeeProfile() {
                       <p className="font-medium text-foreground">Active Sessions</p>
                       <p className="text-sm text-muted-foreground">Manage your active login sessions</p>
                     </div>
-                    <Button variant="outline" size="sm">View</Button>
+                    <Button variant="outline" size="sm" onClick={handleViewSessions}> {/* Add onClick */}
+                      View
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -268,12 +445,21 @@ export default function EmployeeProfile() {
   );
 }
 
-function FormField({ label, value, isEditing }: { label: string; value: string; isEditing: boolean }) {
+function FormField({ label, value, isEditing, onChange }: { 
+  label: string; 
+  value: string; 
+  isEditing: boolean; 
+  onChange?: (value: string) => void;
+}) {
   return (
     <div>
       <Label className="text-muted-foreground text-xs uppercase tracking-wide">{label}</Label>
       {isEditing ? (
-        <Input defaultValue={value} className="mt-1" />
+        <Input 
+          defaultValue={value} 
+          className="mt-1" 
+          onChange={(e) => onChange && onChange(e.target.value)}
+        />
       ) : (
         <p className="text-sm text-foreground mt-1">{value}</p>
       )}

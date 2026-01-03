@@ -17,10 +17,11 @@ const mockEmployees = [
 export default function AdminEmployees() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("all");
+  const [employees, setEmployees] = useState(mockEmployees); // Add state
 
   const departments = ["all", "Engineering", "Marketing", "Design", "HR", "Finance"];
 
-  const filteredEmployees = mockEmployees.filter((emp) => {
+  const filteredEmployees = employees.filter((emp) => {
     const matchesSearch = 
       emp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       emp.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -29,11 +30,54 @@ export default function AdminEmployees() {
     return matchesSearch && matchesDept;
   });
 
+  // Add these functions
+  const handleAddEmployee = () => {
+    const newEmployeeId = `DF${new Date().getFullYear()}${String(employees.length + 1).padStart(4, '0')}`;
+    const newEmployee = {
+      id: String(employees.length + 1),
+      name: `New Employee ${employees.length + 1}`,
+      employeeId: newEmployeeId,
+      email: `newemployee${employees.length + 1}@dayflow.com`,
+      department: "Engineering",
+      position: "New Position",
+      status: "active"
+    };
+    
+    setEmployees([...employees, newEmployee]);
+    alert(`New employee added with ID: ${newEmployeeId}\n\nIn a real application, this would open a form to add employee details.`);
+  };
+
+  const handleViewEmployee = (employeeId: string) => {
+    const employee = employees.find(emp => emp.id === employeeId);
+    if (employee) {
+      alert(`View Employee Details:\n\nName: ${employee.name}\nEmployee ID: ${employee.employeeId}\nEmail: ${employee.email}\nDepartment: ${employee.department}\nPosition: ${employee.position}\nStatus: ${employee.status}\n\nIn a real application, this would open a detailed view page.`);
+    }
+  };
+
+  const handleEditEmployee = (employeeId: string) => {
+    const employee = employees.find(emp => emp.id === employeeId);
+    if (employee) {
+      alert(`Edit Employee: ${employee.name}\n\nIn a real application, this would open an edit form for employee ID: ${employee.employeeId}`);
+    }
+  };
+
+  const handleMoreActions = (employeeId: string) => {
+    const employee = employees.find(emp => emp.id === employeeId);
+    if (employee) {
+      const action = prompt(
+        `Additional actions for ${employee.name}:\n\nEnter action:\n1. Change Status\n2. Generate Report\n3. Send Email\n4. Other`
+      );
+      if (action) {
+        alert(`Action "${action}" selected for ${employee.name}`);
+      }
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-serif text-foreground">Employees</h1>
-        <Button>
+        <Button onClick={handleAddEmployee}> {/* Add onClick */}
           <Plus size={16} className="mr-2" />
           Add Employee
         </Button>
@@ -117,13 +161,28 @@ export default function AdminEmployees() {
                   </td>
                   <td className="py-3 px-4">
                     <div className="flex items-center justify-end gap-1">
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8"
+                        onClick={() => handleViewEmployee(employee.id)} // Add onClick
+                      >
                         <Eye size={14} />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8"
+                        onClick={() => handleEditEmployee(employee.id)} // Add onClick
+                      >
                         <Pencil size={14} />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8"
+                        onClick={() => handleMoreActions(employee.id)} // Add onClick
+                      >
                         <MoreVertical size={14} />
                       </Button>
                     </div>
@@ -138,7 +197,7 @@ export default function AdminEmployees() {
       {/* Pagination placeholder */}
       <div className="flex items-center justify-between mt-4">
         <p className="text-sm text-muted-foreground">
-          Showing {filteredEmployees.length} of {mockEmployees.length} employees
+          Showing {filteredEmployees.length} of {employees.length} employees {/* Change to employees.length */}
         </p>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" disabled>Previous</Button>

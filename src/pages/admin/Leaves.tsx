@@ -75,8 +75,9 @@ export default function AdminLeaves() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [rejectingId, setRejectingId] = useState<number | null>(null);
   const [rejectComment, setRejectComment] = useState("");
+  const [leaveRequests, setLeaveRequests] = useState(mockLeaveRequests); // Add this line
 
-  const filteredRequests = mockLeaveRequests.filter((req) => {
+  const filteredRequests = leaveRequests.filter((req) => { // Change mockLeaveRequests to leaveRequests
     const matchesSearch = req.employee.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === "all" || req.status === statusFilter;
     return matchesSearch && matchesStatus;
@@ -86,13 +87,26 @@ export default function AdminLeaves() {
   const otherRequests = filteredRequests.filter(r => r.status !== "pending");
 
   const handleApprove = (id: number) => {
-    // Approval logic
+    setLeaveRequests(prev => 
+      prev.map(req => 
+        req.id === id ? { ...req, status: 'approved' } : req
+      )
+    );
     console.log("Approved:", id);
+    alert(`Leave request approved successfully!`);
   };
 
   const handleReject = (id: number) => {
     if (!rejectComment.trim()) return;
-    // Rejection logic
+    setLeaveRequests(prev => 
+      prev.map(req => 
+        req.id === id ? { 
+          ...req, 
+          status: 'rejected',
+          adminComment: rejectComment 
+        } : req
+      )
+    );
     console.log("Rejected:", id, "Comment:", rejectComment);
     setRejectingId(null);
     setRejectComment("");
@@ -117,7 +131,7 @@ export default function AdminLeaves() {
         <h1 className="text-2xl font-serif text-foreground">Leave Requests</h1>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <span className="px-2 py-1 bg-warning/20 text-warning-foreground rounded">
-            {mockLeaveRequests.filter(r => r.status === "pending").length} pending
+            {leaveRequests.filter(r => r.status === "pending").length} pending // Change mockLeaveRequests to leaveRequests
           </span>
         </div>
       </div>

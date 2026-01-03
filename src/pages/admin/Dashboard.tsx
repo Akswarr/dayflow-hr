@@ -3,6 +3,7 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Users, Clock, Calendar, DollarSign, ArrowRight, AlertCircle } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useState } from "react"; // Add this import
 
 // Mock data for admin dashboard
 const mockStats = {
@@ -27,12 +28,48 @@ const mockRecentActivity = [
 
 export default function AdminDashboard() {
   const { user } = useAuth();
+  const [pendingLeaves, setPendingLeaves] = useState(mockPendingLeaves); // Add this state
 
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return "Good morning";
     if (hour < 17) return "Good afternoon";
     return "Good evening";
+  };
+
+  // Add this function
+  const handleLeaveAction = async (leaveId, action) => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      const response = await fetch(`http://localhost:5000/api/leaves/${leaveId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ 
+          status: action,
+          adminComment: action === 'approved' ? 'Leave approved' : 'Leave rejected'
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update leave status');
+      }
+
+      const result = await response.json();
+      console.log('Leave updated:', result);
+      
+      // Remove the approved/rejected leave from the list
+      setPendingLeaves(prev => prev.filter(leave => leave.id !== leaveId));
+      
+      alert(`Leave ${action} successfully!`);
+      
+    } catch (error) {
+      console.error('Error updating leave:', error);
+      alert('Failed to update leave status');
+    }
   };
 
   return (
@@ -88,9 +125,9 @@ export default function AdminDashboard() {
             </Button>
           </div>
 
-          {mockPendingLeaves.length > 0 ? (
+          {pendingLeaves.length > 0 ? ( // Change from mockPendingLeaves to pendingLeaves
             <div className="space-y-3">
-              {mockPendingLeaves.map((leave) => (
+              {pendingLeaves.map((leave) => (
                 <div 
                   key={leave.id}
                   className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-border"
@@ -102,10 +139,19 @@ export default function AdminDashboard() {
                     </p>
                   </div>
                   <div className="flex gap-2">
-                    <Button size="sm" variant="outline" className="h-8">
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="h-8"
+                      onClick={() => handleLeaveAction(leave.id, 'rejected')} // Add onClick
+                    >
                       Reject
                     </Button>
-                    <Button size="sm" className="h-8">
+                    <Button 
+                      size="sm" 
+                      className="h-8"
+                      onClick={() => handleLeaveAction(leave.id, 'approved')} // Add onClick
+                    >
                       Approve
                     </Button>
                   </div>

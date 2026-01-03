@@ -53,10 +53,41 @@ export default function EmployeeLeave() {
     endDate: "",
     reason: "",
   });
+  const [leaveHistory, setLeaveHistory] = useState(mockLeaveHistory); // Add state for leave history
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Submit logic would go here
+    
+    // Calculate days between start and end date
+    const start = new Date(newLeave.startDate);
+    const end = new Date(newLeave.endDate);
+    const days = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+    
+    // Create new leave request
+    const newLeaveRequest = {
+      id: leaveHistory.length + 1,
+      type: newLeave.type,
+      startDate: newLeave.startDate,
+      endDate: newLeave.endDate,
+      days: days,
+      status: "pending",
+      reason: newLeave.reason,
+      adminComment: null,
+    };
+    
+    // Update leave balance based on type
+    const leaveType = newLeave.type === "Paid Time Off" ? "paidTimeOff" : "sickLeave";
+    
+    // In a real app, you would make an API call here
+    // Example: await fetch('/api/leaves', { method: 'POST', body: JSON.stringify(newLeaveRequest) });
+    
+    // Add to leave history
+    setLeaveHistory([newLeaveRequest, ...leaveHistory]);
+    
+    // Show success message
+    alert(`Leave request submitted successfully!\n\nType: ${newLeave.type}\nDuration: ${days} day${days > 1 ? 's' : ''}\nFrom: ${newLeave.startDate} to ${newLeave.endDate}`);
+    
+    // Reset form
     setShowNewRequest(false);
     setNewLeave({ type: "Paid Time Off", startDate: "", endDate: "", reason: "" });
   };
@@ -212,7 +243,7 @@ export default function EmployeeLeave() {
           </div>
 
           <div className="divide-y divide-border">
-            {mockLeaveHistory.map((leave) => {
+            {leaveHistory.map((leave) => { // Change from mockLeaveHistory to leaveHistory
               const statusStyle = getStatusStyles(leave.status);
               const StatusIcon = statusStyle.icon;
 

@@ -3,6 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Clock, User, Calendar, CheckCircle, ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom"; // Add this import
 
 // Mock attendance data
 const mockRecentActivity = [
@@ -14,8 +15,14 @@ const mockRecentActivity = [
 
 export default function EmployeeDashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate(); // Add this hook
   const [isCheckedIn, setIsCheckedIn] = useState(false);
   const [lastAction, setLastAction] = useState<string | null>(null);
+
+  // Add this function for navigation
+  const handleViewProfile = () => {
+    navigate("/employee/profile"); // Adjust this path based on your routing
+  };
 
   const handleCheckInOut = () => {
     const now = new Date().toLocaleTimeString("en-US", { 
@@ -103,7 +110,12 @@ export default function EmployeeDashboard() {
               <p className="text-xs text-muted-foreground">{user?.employeeId}</p>
             </div>
           </div>
-          <Button variant="ghost" size="sm" className="w-full justify-between group">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="w-full justify-between group"
+            onClick={handleViewProfile} // Add onClick
+          >
             View Profile
             <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
           </Button>
